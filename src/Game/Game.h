@@ -15,5 +15,5 @@ public:
 	
 private:
 	CGameController m_controller;
-	CGameRenderer   m_renderer;
+	CGameRenderer m_renderer;
 };

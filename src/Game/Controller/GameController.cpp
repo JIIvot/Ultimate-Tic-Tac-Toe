@@ -22,7 +22,7 @@ void CGameController::Update( CApplication* app )
 		m_renderer->Reset();
 	}
 
-	UpdateHoveredCellCoords( app );
+	UpdateHoveredCell( app );
 
 	if ( input->IsButtonJustPressed( SDL_BUTTON_LEFT ) )
 	{
@@ -30,7 +30,7 @@ void CGameController::Update( CApplication* app )
 	}
 }
 
-void CGameController::UpdateHoveredCellCoords( CApplication* app )
+void CGameController::UpdateHoveredCell( CApplication* app )
 {
 	const glm::vec2 mousePosition = app->GetInput()->GetMousePosition();
 
@@ -64,15 +64,15 @@ void CGameController::UpdateHoveredCellCoords( CApplication* app )
 		return;
 	}
 
-	m_hoveredCellCoords   = coords;
+	m_hoveredCell = coords;
 	m_hasValidHoveredCell = true;
 }
 
 void CGameController::Reset()
 {
-	m_closedCellsCoords.clear();
+	m_winningCells.clear();
 
-	m_isCrossTurn       = true;
+	m_isCrossTurn = true;
 	m_isAllBoardsActive = true;
 	m_outerBoardTurnNum = 0;
 
@@ -83,9 +83,7 @@ void CGameController::Reset()
 		{
 			SetBoardEnabled( outer, true );
 			SetOuterCellState( outer, eCellState_None );
-
-			m_innerBoardTurnNums[outer.x][outer.y] = 0;
-
+			ResetInnerBoardTurnNum( outer );
 			ResetInnerBoard( outer );
 		}
 	}
@@ -112,33 +110,34 @@ void CGameController::ProcessClick()
 		return;
 	}
 
-	SetInnerCellState( m_hoveredCellCoords, m_isCrossTurn ? eCellState_Cross : eCellState_Circle );
+	SetInnerCellState( m_hoveredCell, m_isCrossTurn ? eCellState_Cross : eCellState_Circle );
 
-	IncreaseInnerBoardTurnNum( m_hoveredCellCoords.outer );
+	IncreaseInnerBoardTurnNum( m_hoveredCell.outer );
 
-	m_lastTurnCoords    = m_hoveredCellCoords;
-	m_isCrossTurn       = !m_isCrossTurn;
+	m_lastTurnCoords = m_hoveredCell;
+	m_isCrossTurn = !m_isCrossTurn;
 	m_isAllBoardsActive = false;
-	m_activeBoardCoords = m_hoveredCellCoords.inner;
+	m_activeBoard = m_hoveredCell.inner;
 
-	if ( TryCloseInnerBoard() )
+	if ( TryFinishInnerBoard() )
 	{
-		UpdateOuterBoardState();
+		TryFinishOuterBoard();
 	}
 
-	if ( !IsBoardEnabled( m_activeBoardCoords ) )
+	if ( !IsBoardEnabled( m_activeBoard ) )
 	{
 		m_isAllBoardsActive = true;
 	}
 }
 
-bool CGameController::TryCloseInnerBoard()
+bool CGameController::TryFinishInnerBoard()
 {
 	for ( const glm::ivec2& line : kVictoryLines )
 	{
-		const ECellState( &board )[kBoardSize][kBoardSize] = m_innerCells[m_lastTurnCoords.outer.x][m_lastTurnCoords.outer.y];
+		const glm::ivec2 boardCoords = m_lastTurnCoords.outer;
+		const BoardCells& board = m_innerCells[boardCoords.x][boardCoords.y];
 
-		if ( !CheckForVictoryInLine( board, m_lastTurnCoords.inner, line ) )
+		if ( !CheckForWinInLine( board, m_lastTurnCoords.inner, line ) )
 		{
 			continue;
 		}
@@ -163,17 +162,17 @@ bool CGameController::TryCloseInnerBoard()
 	return true;
 }
 
-void CGameController::UpdateOuterBoardState()
+void CGameController::TryFinishOuterBoard()
 {
 	for ( const glm::ivec2& line : kVictoryLines )
 	{
-		if ( !CheckForVictoryInLine( m_outerCells, m_lastTurnCoords.outer, line ) )
+		if ( !CheckForWinInLine( m_outerCells, m_lastTurnCoords.outer, line ) )
 		{
 			continue;
 		}
 
 		DisableAllBoards();
-		CollectClosedCellsCoords( m_outerCells, m_lastTurnCoords.outer, line );
+		CollectOuterWinningCellsLine( m_lastTurnCoords.outer, line );
 
 		m_renderer->OnVictory();
 
@@ -197,9 +196,9 @@ void CGameController::DisableAllBoards()
 	}
 }
 
-int32_t CGameController::GetSequenceLength( const ECellState( &board )[kBoardSize][kBoardSize], glm::ivec2 start, glm::ivec2 direction, ECellState state )
+int32_t CGameController::GetSequenceLength( const BoardCells& board, glm::ivec2 start, glm::ivec2 direction, ECellState state )
 {
-	glm::ivec2 coords =  start + direction;
+	glm::ivec2 coords = start + direction;
 
 	int32_t length = 0;
 	while ( IsValidCoords( coords ) && board[coords.x][coords.y] == state )
@@ -211,18 +210,18 @@ int32_t CGameController::GetSequenceLength( const ECellState( &board )[kBoardSiz
 	return length;
 }
 
-void CGameController::CollectSequence( const ECellState( &board )[kBoardSize][kBoardSize], glm::ivec2 start, glm::ivec2 direction, ECellState state )
+void CGameController::CollectOuterWinningCells( glm::ivec2 start, glm::ivec2 direction, ECellState state )
 {
 	glm::ivec2 coords = start + direction;
 
-	while ( IsValidCoords( coords ) && board[coords.x][coords.y] == state )
+	while ( IsValidCoords( coords ) && GetOuterCellState( coords ) == state )
 	{
-		m_closedCellsCoords.push_back( coords );
+		m_winningCells.push_back( coords );
 		coords += direction;
 	}
 }
 
-bool CGameController::CheckForVictoryInLine( const ECellState( &board )[kBoardSize][kBoardSize], glm::ivec2 start, glm::ivec2 line )
+bool CGameController::CheckForWinInLine( const BoardCells& board, glm::ivec2 start, glm::ivec2 line )
 {
 	const ECellState state = board[start.x][start.y];
 
@@ -232,12 +231,12 @@ bool CGameController::CheckForVictoryInLine( const ECellState( &board )[kBoardSi
 	return positiveLength + negativeLength + 1 >= kWinSequenceLength;
 }
 
-void CGameController::CollectClosedCellsCoords( const ECellState( &board )[kBoardSize][kBoardSize], glm::ivec2 start, glm::ivec2 line )
+void CGameController::CollectOuterWinningCellsLine( glm::ivec2 start, glm::ivec2 line )
 {
-	const ECellState state = board[start.x][start.y];
+	const ECellState state = GetOuterCellState( start );
 
-	CollectSequence( board, start, line, state );
-	CollectSequence( board, start, -line, state );
+	CollectOuterWinningCells( start, line, state );
+	CollectOuterWinningCells( start, -line, state );
 
-	m_closedCellsCoords.push_back( start );
+	m_winningCells.push_back( start );
 }

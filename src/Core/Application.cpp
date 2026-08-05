@@ -14,11 +14,11 @@ CApplication::CApplication()
 		return;
 	}
 
-	const SDL_DisplayID    displayId   = SDL_GetPrimaryDisplay();
+	const SDL_DisplayID displayId = SDL_GetPrimaryDisplay();
 	const SDL_DisplayMode* displayMode = SDL_GetCurrentDisplayMode( displayId );
 
-	const int32_t width      = static_cast<int32_t>( displayMode->w / 1.5f );
-	const int32_t height     = static_cast<int32_t>( displayMode->h / 1.5f );
+	const int32_t width = static_cast<int32_t>( displayMode->w / 1.5f );
+	const int32_t height = static_cast<int32_t>( displayMode->h / 1.5f );
 	const int32_t windowSize = std::min( width, height );
 	
 	m_window = SDL_CreateWindow( "Ultimate Tic-Tac-Toe", windowSize, windowSize, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY );
@@ -47,10 +47,10 @@ CApplication::CApplication()
 	SDL_SetRenderLogicalPresentation( m_renderer, kGameWidth, kGameHeight, SDL_LOGICAL_PRESENTATION_LETTERBOX );
 	SDL_SetRenderVSync( m_renderer, 1 );
 
-	m_input           = std::make_unique<CInput>();
-	m_game            = std::make_unique<CGame>();
-	m_shouldRun       = true;
-	m_perfFrequency   = static_cast<float>( SDL_GetPerformanceFrequency() );
+	m_input = std::make_unique<CInput>();
+	m_game = std::make_unique<CGame>();
+	m_shouldRun = true;
+	m_perfFrequency = static_cast<float>( SDL_GetPerformanceFrequency() );
 	m_lastPerfCounter = SDL_GetPerformanceCounter();
 }
 
@@ -99,7 +99,7 @@ void CApplication::ToggleFullscreen()
 void CApplication::UpdateDeltaTime()
 {
 	const uint64_t currPerfCounter = SDL_GetPerformanceCounter();
-	m_deltaTime       = static_cast<float>( currPerfCounter - m_lastPerfCounter ) / m_perfFrequency;
+	m_deltaTime = static_cast<float>( currPerfCounter - m_lastPerfCounter ) / m_perfFrequency;
 	m_lastPerfCounter = currPerfCounter;
 }
 

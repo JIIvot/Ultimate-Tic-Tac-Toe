@@ -14,31 +14,48 @@ public:
 
 	void ProcessAnimation( CApplication* app );
 
-	void ResetAnimation() { m_size = 0.0f; }
+	void ResetAnimation()
+	{
+		m_size = 0.0f;
+	}
 
-	void SetNormalSize() { m_targetSize = kNormalSize; }
-	void SetHoveredSize() { m_targetSize = kHoveredSize; }
-	void SetClosedSize() { m_targetSize = kClosedSize; }
+	void SetNormalSize()
+	{
+		m_targetSize = kNormalSize;
+	}
 
-	void SetOuterScale() { m_scale = kOuterScale; }
+	void SetHoveredSize()
+	{
+		m_targetSize = kHoveredSize;
+	}
+
+	void SetClosedSize()
+	{
+		m_targetSize = kClosedSize;
+	}
+
+	void SetOuterScale()
+	{
+		m_scale = kOuterScale;
+	}
 
 private:
 	[[nodiscard]]
 	static const SDL_FRect* GetSpriteRect( ECellState state, bool isActive );
 
 public:
-	glm::vec2 m_position   = { 0.0f, 0.0f };
+	glm::vec2 m_position = { 0.0f, 0.0f };
 
 private:
-	static constexpr float     kSizeLerpSpeed = 10.0f;
-	static constexpr float     kSizeLerpError = 0.1f;
+	static constexpr float kSizeLerpSpeed = 10.0f;
+	static constexpr float kSizeLerpError = 0.1f;
 
-	static constexpr int32_t   kSpriteSize    = 24;
-	static constexpr float     kNormalSize    = kSpriteSize;
-	static constexpr float     kHoveredSize   = kNormalSize * 2.0f;
-	static constexpr float     kClosedSize    = kNormalSize * 0.75f;
+	static constexpr int32_t kSpriteSize = 24;
+	static constexpr float kNormalSize = kSpriteSize;
+	static constexpr float kHoveredSize = kNormalSize * 2.0f;
+	static constexpr float kClosedSize = kNormalSize * 0.75f;
 
-	static constexpr float     kOuterScale    = 4.0f;
+	static constexpr float kOuterScale = 4.0f;
 
 	// Each index corresponds to ECellState enum.
 	// Active cell sprites go first.
@@ -51,7 +68,7 @@ private:
 		{ 64.0f,  0.0f, kSpriteSize, kSpriteSize }  // Circle Not Active
 	};
 
-	float     m_size       = 0.0f;
-	float     m_targetSize = kNormalSize;
-	float     m_scale      = 1.0f;
+	float m_size = 0.0f;
+	float m_targetSize = kNormalSize;
+	float m_scale = 1.0f;
 };

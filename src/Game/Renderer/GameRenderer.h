@@ -5,6 +5,7 @@
 #include "Game/CellCoords.h"
 
 #include <glm/vec2.hpp>
+#include <array>
 
 class CCellRenderer;
 class CGameController;
@@ -12,6 +13,10 @@ class CApplication;
 
 class CGameRenderer
 {
+private:
+	using BoardRenderers = std::array<std::array<CCellRenderer, kBoardSize>, kBoardSize>;
+	using InnerRenderers = std::array<std::array<BoardRenderers, kBoardSize>, kBoardSize>;
+
 public:
 	CGameRenderer();
 
@@ -20,6 +25,7 @@ public:
 	void Render( CApplication* app );
 
 	void OnVictory();
+
 	void OnDraw();
 
 private:
@@ -32,18 +38,24 @@ private:
 	void ProcessHoveredCell();
 
 	[[nodiscard]]
-	CCellRenderer& GetOuterRenderer( glm::ivec2 outer ) { return m_outerRenderers[outer.x][outer.y]; }
+	CCellRenderer& GetOuterRenderer( glm::ivec2 outer )
+	{
+		return m_outerRenderers[outer.x][outer.y];
+	}
 
 	[[nodiscard]]
-	CCellRenderer& GetInnerRenderer( const SCellCoords& coords ) { return m_innerRenderers[coords.outer.x][coords.outer.y][coords.inner.x][coords.inner.y]; }
+	CCellRenderer& GetInnerRenderer( const SCellCoords& coords )
+	{
+		return m_innerRenderers[coords.outer.x][coords.outer.y][coords.inner.x][coords.inner.y];
+	}
 
 public:
-	CGameController* m_controller          = nullptr;
+	CGameController* m_controller = nullptr;
 
 private:
-	SCellCoords      m_lastHoveredCellCoords;
-	bool             m_hadValidHoveredCell = false;
+	SCellCoords m_lastHoveredCellCoords;
+	bool m_hadValidHoveredCell = false;
 
-	CCellRenderer    m_outerRenderers[kBoardSize][kBoardSize];
-	CCellRenderer    m_innerRenderers[kBoardSize][kBoardSize][kBoardSize][kBoardSize];
+	BoardRenderers m_outerRenderers;
+	InnerRenderers m_innerRenderers;
 };

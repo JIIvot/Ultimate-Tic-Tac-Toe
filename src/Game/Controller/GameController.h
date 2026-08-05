@@ -4,6 +4,7 @@
 #include "Game/CellCoords.h"
 
 #include <vector>
+#include <array>
 #include <glm/vec2.hpp>
 
 enum ECellState : uint8_t;
@@ -12,72 +13,123 @@ class CGameRenderer;
 
 class CGameController
 {
+private:
+	using BoardCells = std::array<std::array<ECellState, kBoardSize>, kBoardSize>;
+	using InnerCells = std::array<std::array<BoardCells, kBoardSize>, kBoardSize>;
+	using BoardEnabled = std::array<std::array<bool, kBoardSize>, kBoardSize>;
+	using InnerBoardTurnNums = std::array<std::array<int32_t, kBoardSize>, kBoardSize>;
+
 public:
 	CGameController();
 
 	void Update( CApplication* app );
 
 	[[nodiscard]]
-	bool IsBoardEnabled( glm::ivec2 coords ) const { return m_boardEnabled[coords.x][coords.y]; }
+	bool IsBoardEnabled( glm::ivec2 coords ) const
+	{
+		return m_boardEnabled[coords.x][coords.y];
+	}
 
 	[[nodiscard]]
-	bool HasValidHoveredCell() const { return m_hasValidHoveredCell; }
+	bool HasValidHoveredCell() const
+	{
+		return m_hasValidHoveredCell;
+	}
 
 	[[nodiscard]]
-	const SCellCoords& GetHoveredCellCoords() const { return m_hoveredCellCoords; }
+	const SCellCoords& GetHoveredCell() const
+	{
+		return m_hoveredCell;
+	}
 
 	[[nodiscard]]
-	ECellState GetOuterCellState( glm::ivec2 outer ) const { return m_outerCells[outer.x][outer.y]; }
+	ECellState GetOuterCellState( glm::ivec2 outer ) const
+	{
+		return m_outerCells[outer.x][outer.y];
+	}
 
 	[[nodiscard]]
-	ECellState GetInnerCellState( const SCellCoords& coords ) const { return m_innerCells[coords.outer.x][coords.outer.y][coords.inner.x][coords.inner.y]; }
+	ECellState GetInnerCellState( const SCellCoords& coords ) const
+	{
+		return m_innerCells[coords.outer.x][coords.outer.y][coords.inner.x][coords.inner.y];
+	}
 
 	[[nodiscard]]
-	bool IsBoardActive( glm::ivec2 coords ) const { return m_isAllBoardsActive || ( m_activeBoardCoords.x == coords.x && m_activeBoardCoords.y == coords.y ); }
+	bool IsBoardActive( glm::ivec2 coords ) const
+	{
+		return m_isAllBoardsActive || ( m_activeBoard.x == coords.x && m_activeBoard.y == coords.y );
+	}
 
 	[[nodiscard]]
-	const std::vector<glm::ivec2>& GetClosedCellsCoords() const { return m_closedCellsCoords; }
+	const std::vector<glm::ivec2>& GetWinningCells() const
+	{
+		return m_winningCells;
+	}
 
 private:
 	[[nodiscard]]
-	static bool IsValidCoords( glm::ivec2 coords ) { return coords.x >= 0 && coords.x < kBoardSize && coords.y >= 0 && coords.y < kBoardSize; }
+	static bool IsValidCoords( glm::ivec2 coords )
+	{
+		return coords.x >= 0 && coords.x < kBoardSize && coords.y >= 0 && coords.y < kBoardSize;
+	}
 
-	void UpdateHoveredCellCoords( CApplication* app );
+	[[nodiscard]]
+	static int32_t GetSequenceLength( const BoardCells& board, glm::ivec2 start, glm::ivec2 direction, ECellState state );
+
+	[[nodiscard]]
+	static bool CheckForWinInLine( const BoardCells& board, glm::ivec2 start, glm::ivec2 line );
+
+	void UpdateHoveredCell( CApplication* app );
 
 	void Reset();
+
 	void ResetInnerBoard( glm::ivec2 outer );
 
 	void ProcessClick();
 
-	void SetInnerCellState( const SCellCoords& coords, ECellState state ) { m_innerCells[coords.outer.x][coords.outer.y][coords.inner.x][coords.inner.y] = state; }
+	void SetInnerCellState( const SCellCoords& coords, ECellState state )
+	{
+		m_innerCells[coords.outer.x][coords.outer.y][coords.inner.x][coords.inner.y] = state;
+	}
 
-	bool TryCloseInnerBoard();
+	bool TryFinishInnerBoard();
 
-	void UpdateOuterBoardState();
+	void TryFinishOuterBoard();
 
 	void DisableAllBoards();
 
-	[[nodiscard]]
-	static int32_t GetSequenceLength( const ECellState( &board )[kBoardSize][kBoardSize], glm::ivec2 start, glm::ivec2 direction, ECellState state );
+	void CollectOuterWinningCells( glm::ivec2 start, glm::ivec2 direction, ECellState state );
+
+	void CollectOuterWinningCellsLine( glm::ivec2 start, glm::ivec2 line );
+
+	void SetOuterCellState( glm::ivec2 coords, ECellState state )
+	{
+		m_outerCells[coords.x][coords.y] = state;
+	}
+
+	void SetBoardEnabled( glm::ivec2 coords, bool isEnabled )
+	{
+		m_boardEnabled[coords.x][coords.y] = isEnabled;
+	}
 
 	[[nodiscard]]
-	static bool CheckForVictoryInLine( const ECellState( &board )[kBoardSize][kBoardSize], glm::ivec2 start, glm::ivec2 line );
+	int32_t GetInnerBoardTurnNum( glm::ivec2 coords ) const
+	{
+		return m_innerBoardTurnNums[coords.x][coords.y];
+	}
 
-	void CollectSequence( const ECellState( &board )[kBoardSize][kBoardSize], glm::ivec2 start, glm::ivec2 direction, ECellState state );
+	void IncreaseInnerBoardTurnNum( glm::ivec2 coords )
+	{
+		++m_innerBoardTurnNums[coords.x][coords.y];
+	}
 
-	void CollectClosedCellsCoords( const ECellState( &board )[kBoardSize][kBoardSize], glm::ivec2 start, glm::ivec2 line );
-
-	void SetOuterCellState( glm::ivec2 coords, ECellState state ) { m_outerCells[coords.x][coords.y] = state; }
-
-	void SetBoardEnabled( glm::ivec2 coords, bool isEnabled ) { m_boardEnabled[coords.x][coords.y] = isEnabled; }
-
-	[[nodiscard]]
-	int32_t GetInnerBoardTurnNum( glm::ivec2 coords ) const { return m_innerBoardTurnNums[coords.x][coords.y]; }
-
-	void IncreaseInnerBoardTurnNum( glm::ivec2 coords ) { ++m_innerBoardTurnNums[coords.x][coords.y]; }
+	void ResetInnerBoardTurnNum( glm::ivec2 coords )
+	{
+		m_innerBoardTurnNums[coords.x][coords.y] = 0;
+	}
 
 public:
-	CGameRenderer*          m_renderer            = nullptr;
+	CGameRenderer* m_renderer = nullptr;
 
 private:
 	static constexpr glm::ivec2 kVictoryLines[] = {
@@ -87,21 +139,21 @@ private:
 		{ 1, -1 }
 	};
 
-	ECellState              m_outerCells[kBoardSize][kBoardSize];
-	ECellState              m_innerCells[kBoardSize][kBoardSize][kBoardSize][kBoardSize];
-	bool                    m_boardEnabled[kBoardSize][kBoardSize];
+	BoardCells m_outerCells;
+	InnerCells m_innerCells;
+	BoardEnabled m_boardEnabled;
 
-	int32_t                 m_innerBoardTurnNums[kBoardSize][kBoardSize];
-	int32_t                 m_outerBoardTurnNum;
+	InnerBoardTurnNums m_innerBoardTurnNums;
+	int32_t m_outerBoardTurnNum;
 
-	SCellCoords             m_hoveredCellCoords;
-	bool                    m_hasValidHoveredCell = false;
+	SCellCoords m_hoveredCell;
+	bool m_hasValidHoveredCell = false;
 
-	bool                    m_isAllBoardsActive   = true;
-	glm::ivec2              m_activeBoardCoords;
+	bool m_isAllBoardsActive = true;
+	glm::ivec2 m_activeBoard;
 
-	bool                    m_isCrossTurn;
-	SCellCoords             m_lastTurnCoords;
+	bool m_isCrossTurn;
+	SCellCoords m_lastTurnCoords;
 
-	std::vector<glm::ivec2> m_closedCellsCoords;
+	std::vector<glm::ivec2> m_winningCells;
 };

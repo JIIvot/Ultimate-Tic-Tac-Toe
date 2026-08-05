@@ -6,12 +6,11 @@
 
 void CCellRenderer::Render( CApplication* app, ECellState state, bool isActive ) const
 {
-	const SDL_FRect destRect = {
-		.x = m_position.x - m_size * m_scale * 0.5f,
-		.y = m_position.y - m_size * m_scale * 0.5f,
-		.w = m_size * m_scale,
-		.h = m_size * m_scale
-	};
+	SDL_FRect destRect;
+	destRect.x = m_position.x - m_size * m_scale * 0.5f;
+	destRect.y = m_position.y - m_size * m_scale * 0.5f;
+	destRect.w = m_size * m_scale;
+	destRect.h = m_size * m_scale;
 
 	SDL_RenderTexture( app->GetRenderer(), app->GetAtlasTexture(), GetSpriteRect( state, isActive ), &destRect );
 }

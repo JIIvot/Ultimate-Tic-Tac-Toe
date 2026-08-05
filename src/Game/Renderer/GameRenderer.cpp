@@ -11,10 +11,8 @@ CGameRenderer::CGameRenderer()
 			CCellRenderer& outerRenderer = GetOuterRenderer( outer );
 			outerRenderer.SetOuterScale();
 
-			outerRenderer.m_position = {
-				kOuterCellRegionSize.x * ( outer.x + 0.5f ),
-				kOuterCellRegionSize.y * ( outer.y + 0.5f )
-			};
+			outerRenderer.m_position.x = kOuterCellRegionSize.x * ( outer.x + 0.5f );
+			outerRenderer.m_position.y = kOuterCellRegionSize.y * ( outer.y + 0.5f );
 
 			InitInnerCellRenderers( outer );
 		}
@@ -53,8 +51,8 @@ void CGameRenderer::Render( CApplication* app )
 				continue;
 			}
 
-			CCellRenderer&   renderer = GetOuterRenderer( outer );
-			const ECellState state    = m_controller->GetOuterCellState( outer );
+			CCellRenderer& renderer = GetOuterRenderer( outer );
+			const ECellState state = m_controller->GetOuterCellState( outer );
 
 			renderer.ProcessAnimation( app );
 			renderer.Render( app, state, false );
@@ -64,8 +62,8 @@ void CGameRenderer::Render( CApplication* app )
 
 void CGameRenderer::OnVictory()
 {
-	const std::vector<glm::ivec2>& closedCellsCoords = m_controller->GetClosedCellsCoords();
-	for ( const glm::ivec2& coords : closedCellsCoords )
+	const std::vector<glm::ivec2>& closedCellsCoords = m_controller->GetWinningCells();
+	for ( glm::ivec2 coords : closedCellsCoords )
 	{
 		GetOuterRenderer( coords ).SetClosedSize();
 	}
@@ -93,10 +91,8 @@ void CGameRenderer::InitInnerCellRenderers( glm::ivec2 outer )
 		{
 			CCellRenderer& renderer = GetInnerRenderer( coords );
 
-			renderer.m_position = {
-				kOuterCellRegionSize.x * outer.x + kInnerCellRegionSize.x * ( coords.inner.x + 0.5f ),
-				kOuterCellRegionSize.y * outer.y + kInnerCellRegionSize.y * ( coords.inner.y + 0.5f )
-			};
+			renderer.m_position.x = kOuterCellRegionSize.x * outer.x + kInnerCellRegionSize.x * ( coords.inner.x + 0.5f );
+			renderer.m_position.y = kOuterCellRegionSize.y * outer.y + kInnerCellRegionSize.y * ( coords.inner.y + 0.5f );
 		}
 	}
 }
@@ -125,8 +121,8 @@ void CGameRenderer::RenderInnerBoard( CApplication* app, glm::ivec2 outer, bool 
 	{
 		for ( coords.inner.y = 0; coords.inner.y < kBoardSize; ++coords.inner.y )
 		{
-			CCellRenderer&   renderer = GetInnerRenderer( coords );
-			const ECellState state    = m_controller->GetInnerCellState( coords );
+			CCellRenderer& renderer = GetInnerRenderer( coords );
+			const ECellState state = m_controller->GetInnerCellState( coords );
 
 			renderer.ProcessAnimation( app );
 			renderer.Render( app, state, isActive );
@@ -147,9 +143,9 @@ void CGameRenderer::ProcessHoveredCell()
 		return;
 	}
 
-	const SCellCoords& coords = m_controller->GetHoveredCellCoords();
+	const SCellCoords& coords = m_controller->GetHoveredCell();
 	GetInnerRenderer( coords ).SetHoveredSize();
 
 	m_lastHoveredCellCoords = coords;
-	m_hadValidHoveredCell   = true;
+	m_hadValidHoveredCell = true;
 }
