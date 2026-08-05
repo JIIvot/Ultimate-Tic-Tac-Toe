@@ -60,10 +60,10 @@ void CGameRenderer::Render( CApplication* app )
 	}
 }
 
-void CGameRenderer::OnVictory()
+void CGameRenderer::OnWin()
 {
-	const std::vector<glm::ivec2>& closedCellsCoords = m_controller->GetWinningCells();
-	for ( glm::ivec2 coords : closedCellsCoords )
+	const std::vector<glm::ivec2>& winningCells = m_controller->GetWinningCells();
+	for ( glm::ivec2 coords : winningCells )
 	{
 		GetOuterRenderer( coords ).SetClosedSize();
 	}

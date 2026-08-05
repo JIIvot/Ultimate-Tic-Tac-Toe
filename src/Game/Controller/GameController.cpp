@@ -174,7 +174,7 @@ void CGameController::TryFinishOuterBoard()
 		DisableAllBoards();
 		CollectOuterWinningCellsLine( m_lastTurnCoords.outer, line );
 
-		m_renderer->OnVictory();
+		m_renderer->OnWin();
 
 		return;
 	}

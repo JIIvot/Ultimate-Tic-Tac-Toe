@@ -24,7 +24,7 @@ public:
 
 	void Render( CApplication* app );
 
-	void OnVictory();
+	void OnWin();
 
 	void OnDraw();
 
