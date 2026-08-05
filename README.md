@@ -1,5 +1,5 @@
 # Ultimate Tic-Tac-Toe
-Ultimate Tic-Tac-Toe game made in C++ using SDL3 and SDL3_image libraries
+Ultimate Tic-Tac-Toe game made in C++ using SDL3, SDL3_image and GLM libraries
 
 Controls: F11 - Toggle fullscreen mode, R - Restart, Escape - Exit
 
