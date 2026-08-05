@@ -224,6 +224,10 @@ void CGameController::CollectOuterWinningCells( glm::ivec2 start, glm::ivec2 dir
 bool CGameController::CheckForWinInLine( const BoardCells& board, glm::ivec2 start, glm::ivec2 line )
 {
 	const ECellState state = board[start.x][start.y];
+	if ( state == eCellState_None )
+	{
+		return false;
+	}
 
 	const int32_t positiveLength = GetSequenceLength( board, start, line, state );
 	const int32_t negativeLength = GetSequenceLength( board, start, -line, state );
