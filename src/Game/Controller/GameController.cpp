@@ -132,7 +132,7 @@ void CGameController::ProcessClick()
 
 bool CGameController::TryFinishInnerBoard()
 {
-	for ( const glm::ivec2& line : kVictoryLines )
+	for ( glm::ivec2 line : kVictoryLines )
 	{
 		const glm::ivec2 boardCoords = m_lastTurnCoords.outer;
 		const BoardCells& board = m_innerCells[boardCoords.x][boardCoords.y];
@@ -164,7 +164,7 @@ bool CGameController::TryFinishInnerBoard()
 
 void CGameController::TryFinishOuterBoard()
 {
-	for ( const glm::ivec2& line : kVictoryLines )
+	for ( glm::ivec2 line : kVictoryLines )
 	{
 		if ( !CheckForWinInLine( m_outerCells, m_lastTurnCoords.outer, line ) )
 		{
