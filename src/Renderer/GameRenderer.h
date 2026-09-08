@@ -20,6 +20,8 @@ private:
 public:
 	CGameRenderer( CGameController* controller );
 
+	~CGameRenderer();
+
 	void Render( const CGame* game );
 
 private:

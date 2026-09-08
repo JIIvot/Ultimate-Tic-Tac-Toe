@@ -32,6 +32,13 @@ CGameRenderer::CGameRenderer( CGameController* controller )
 	}
 }
 
+CGameRenderer::~CGameRenderer()
+{
+	m_controller->SetOnDrawEventFunction( nullptr );
+	m_controller->SetOnWinEventFunction( nullptr );
+	m_controller->SetOnResetEventFunction( nullptr );
+}
+
 void CGameRenderer::Reset()
 {
 	glm::ivec2 outer;
