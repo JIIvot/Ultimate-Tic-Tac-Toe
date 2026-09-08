@@ -1,7 +1,7 @@
-﻿#include "Core/Application.h"
+﻿#include "Game.h"
 
 int main()
 {
-	CApplication app;
-	app.Run();
+	CGame game;
+	game.Run();
 }

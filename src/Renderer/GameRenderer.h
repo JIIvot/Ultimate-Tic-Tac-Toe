@@ -1,15 +1,15 @@
 ﻿#pragma once
 
+#include "CellCoords.h"
+#include "Constants.h"
 #include "CellRenderer.h"
-#include "SharedConstants.h"
-#include "Game/CellCoords.h"
 
 #include <glm/vec2.hpp>
 #include <array>
 
-class CCellRenderer;
+struct SDL_Renderer;
 class CGameController;
-class CApplication;
+class CGame;
 
 class CGameRenderer
 {
@@ -18,22 +18,24 @@ private:
 	using InnerRenderers = std::array<std::array<BoardRenderers, kBoardSize>, kBoardSize>;
 
 public:
-	CGameRenderer();
+	CGameRenderer( CGameController* controller );
+
+	void Render( const CGame* game );
+
+private:
+	static void RenderBackground( SDL_Renderer* renderer );
 
 	void Reset();
-
-	void Render( CApplication* app );
 
 	void OnWin();
 
 	void OnDraw();
 
-private:
 	void InitInnerCellRenderers( glm::ivec2 outer );
 
 	void ResetInnerCellRenderers( glm::ivec2 outer );
 
-	void RenderInnerBoard( CApplication* app, glm::ivec2 outer, bool isActive );
+	void RenderInnerBoard( const CGame* game, glm::ivec2 outer, bool isActive );
 
 	void ProcessHoveredCell();
 
@@ -49,10 +51,9 @@ private:
 		return m_innerRenderers[coords.outer.x][coords.outer.y][coords.inner.x][coords.inner.y];
 	}
 
-public:
-	CGameController* m_controller = nullptr;
-
 private:
+	CGameController* m_controller;
+
 	SCellCoords m_lastHoveredCellCoords;
 	bool m_hadValidHoveredCell = false;
 

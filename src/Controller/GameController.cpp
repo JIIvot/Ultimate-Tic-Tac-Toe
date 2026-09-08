@@ -1,28 +1,48 @@
 ﻿#include "GameController.h"
-#include "Game/CellState.h"
-#include "Core/Application.h"
-#include "Core/Input.h"
-#include "SharedConstants.h"
-#include "Game/Renderer/GameRenderer.h"
+#include "CellState.h"
+#include "Game.h"
+#include "Input.h"
+#include "Constants.h"
 
 #include <SDL3/SDL_render.h>
+
+static constexpr glm::ivec2 kVictoryLines[] = {
+	{ 1,  0 },
+	{ 0,  1 },
+	{ 1,  1 },
+	{ 1, -1 }
+};
 
 CGameController::CGameController()
 {
 	Reset();
 }
 
-void CGameController::Update( CApplication* app )
+void CGameController::Update( CGame* game )
 {
-	const CInput* input = app->GetInput();
+	const CInput* input = game->GetInput();
+
+	if ( input->IsKeyJustPressed( SDL_SCANCODE_ESCAPE ) )
+	{
+		game->Quit();
+	}
+
+	if ( input->IsKeyJustPressed( SDL_SCANCODE_F11 ) )
+	{
+		game->ToggleFullscreen();
+	}
 
 	if ( input->IsKeyJustPressed( SDL_SCANCODE_R ) )
 	{
 		Reset();
-		m_renderer->Reset();
+
+		if ( m_onResetEventFunction )
+		{
+			m_onResetEventFunction();
+		}
 	}
 
-	UpdateHoveredCell( app );
+	UpdateHoveredCell( game );
 
 	if ( input->IsButtonJustPressed( SDL_BUTTON_LEFT ) )
 	{
@@ -30,13 +50,13 @@ void CGameController::Update( CApplication* app )
 	}
 }
 
-void CGameController::UpdateHoveredCell( CApplication* app )
+void CGameController::UpdateHoveredCell( CGame* game )
 {
-	const glm::vec2 mousePosition = app->GetInput()->GetMousePosition();
+	const glm::vec2 mousePosition = game->GetInput()->GetMousePosition();
 
 	float renderX;
 	float renderY;
-	SDL_RenderCoordinatesFromWindow( app->GetRenderer(), mousePosition.x, mousePosition.y, &renderX, &renderY );
+	SDL_RenderCoordinatesFromWindow( game->GetRenderer(), mousePosition.x, mousePosition.y, &renderX, &renderY );
 
 	const bool isValidX = renderX >= 0 && renderX < kGameWidth;
 	const bool isValidY = renderY >= 0 && renderY < kGameHeight;
@@ -174,14 +194,17 @@ void CGameController::TryFinishOuterBoard()
 		DisableAllBoards();
 		CollectOuterWinningCellsLine( m_lastTurnCoords.outer, line );
 
-		m_renderer->OnWin();
+		if ( m_onWinEventFunction )
+		{
+			m_onWinEventFunction();
+		}
 
 		return;
 	}
 
-	if ( m_outerBoardTurnNum == kTotalBoardSize )
+	if ( m_outerBoardTurnNum == kTotalBoardSize && m_onDrawEventFunction )
 	{
-		m_renderer->OnDraw();
+		m_onDrawEventFunction();
 	}
 }
 

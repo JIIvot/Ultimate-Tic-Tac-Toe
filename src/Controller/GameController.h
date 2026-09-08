@@ -1,15 +1,15 @@
 ﻿#pragma once
 
-#include "SharedConstants.h"
-#include "Game/CellCoords.h"
+#include "Constants.h"
+#include "CellCoords.h"
 
 #include <vector>
 #include <array>
 #include <glm/vec2.hpp>
+#include <functional>
 
 enum ECellState : uint8_t;
-class CApplication;
-class CGameRenderer;
+class CGame;
 
 class CGameController
 {
@@ -22,7 +22,7 @@ private:
 public:
 	CGameController();
 
-	void Update( CApplication* app );
+	void Update( CGame* game );
 
 	[[nodiscard]]
 	bool IsBoardEnabled( glm::ivec2 coords ) const
@@ -66,6 +66,21 @@ public:
 		return m_winningCells;
 	}
 
+	void SetOnDrawEventFunction( std::function<void()> onDrawEventFunction )
+	{
+		m_onDrawEventFunction = std::move( onDrawEventFunction );
+	}
+
+	void SetOnWinEventFunction( std::function<void()> onWinEventFunction )
+	{
+		m_onWinEventFunction = std::move( onWinEventFunction );
+	}
+
+	void SetOnResetEventFunction( std::function<void()> onResetEventFunction )
+	{
+		m_onResetEventFunction = std::move( onResetEventFunction );
+	}
+
 private:
 	[[nodiscard]]
 	static bool IsValidCoords( glm::ivec2 coords )
@@ -79,7 +94,7 @@ private:
 	[[nodiscard]]
 	static bool CheckForWinInLine( const BoardCells& board, glm::ivec2 start, glm::ivec2 line );
 
-	void UpdateHoveredCell( CApplication* app );
+	void UpdateHoveredCell( CGame* game );
 
 	void Reset();
 
@@ -128,16 +143,10 @@ private:
 		m_innerBoardTurnNums[coords.x][coords.y] = 0;
 	}
 
-public:
-	CGameRenderer* m_renderer = nullptr;
-
 private:
-	static constexpr glm::ivec2 kVictoryLines[] = {
-		{ 1,  0 },
-		{ 0,  1 },
-		{ 1,  1 },
-		{ 1, -1 }
-	};
+	std::function<void()> m_onDrawEventFunction;
+	std::function<void()> m_onWinEventFunction;
+	std::function<void()> m_onResetEventFunction;
 
 	BoardCells m_outerCells;
 	InnerCells m_innerCells;
